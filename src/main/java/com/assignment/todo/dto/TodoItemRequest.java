@@ -7,11 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class TodoItem {
-    private Integer id;
+public class TodoItemRequest {
     private String description;
-    private String status; // "not done", "done", "past due"
     private LocalDateTime dueDateTime;
-    private LocalDateTime doneAt;
-    private LocalDateTime createdAt;
 }
