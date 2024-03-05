@@ -3,13 +3,13 @@ package com.assignment.todo.exception.handler;
 import com.assignment.todo.dto.ErrorResponse;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 
 /**
  * Global Exception Handler
@@ -19,11 +19,24 @@ import org.springframework.web.context.request.WebRequest;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {
+            MethodArgumentNotValidException.class
+    })
+    public ResponseEntity<ErrorResponse> handleRequestValidationException(
+            final MethodArgumentNotValidException exception, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .path(request.getRequestURI())
+                        .message("Invalid Request")
+                        .messages(MethodArgumentNotValidException.errorsToStringList(exception.getAllErrors()))
+                        .build());
+    }
+
+    @ExceptionHandler(value = {
             ItemNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundException(
-            final Exception exception, final WebRequest request) {
-        var requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
+            final Exception exception, final HttpServletRequest request) {
+        var requestUri = request.getRequestURI();
         // Depending on the possible use cases, we can skip printing the stacktrace here
         log.error("Exception encountered in path {} : {}", requestUri , exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -37,8 +50,8 @@ public class GlobalExceptionHandler {
             ActionNotAllowedException.class
     })
     public ResponseEntity<ErrorResponse> handleNotAllowedException(
-            final Exception exception, final WebRequest request) {
-        var requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
+            final Exception exception, final HttpServletRequest request) {
+        var requestUri = request.getRequestURI();
         log.error("Exception encountered in path {} : {}", requestUri , exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.builder()
