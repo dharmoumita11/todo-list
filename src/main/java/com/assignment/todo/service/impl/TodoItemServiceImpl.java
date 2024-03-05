@@ -3,7 +3,8 @@ package com.assignment.todo.service.impl;
 import com.assignment.todo.constants.TodoItemStatus;
 import com.assignment.todo.dal.dao.TodoItemEntityRepository;
 import com.assignment.todo.dal.entity.TodoItemEntity;
-import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.dto.CreateTodoItemRequest;
+import com.assignment.todo.dto.UpdateTodoItemRequest;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
@@ -67,11 +68,11 @@ public class TodoItemServiceImpl implements TodoItemService {
     /**
      * Add a new TodoItem to the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param item  {@link CreateTodoItemRequest}
      * @return newly added {@link TodoItemEntity}
      */
     @Override
-    public TodoItemEntity addItem(TodoItemRequest item) {
+    public TodoItemEntity addItem(CreateTodoItemRequest item) {
         return todoItemEntityRepository.save(
                 TodoItemEntity.builder()
                         .description(item.getDescription())
@@ -85,13 +86,13 @@ public class TodoItemServiceImpl implements TodoItemService {
     /**
      * Update a TodoItem in the list
      *
-     * @param request  {@link TodoItemRequest}
+     * @param request  {@link UpdateTodoItemRequest}
      * @return updated {@link TodoItemEntity}
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      * @throws ActionNotAllowedException if the item for the input id is past due
      */
     @Override
-    public TodoItemEntity updateItem(Integer id, TodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
+    public TodoItemEntity updateItem(Integer id, UpdateTodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
                 // TODO : Momo : ItemNotFoundException
                 .orElseThrow(() -> new ItemNotFoundException(id));

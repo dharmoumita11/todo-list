@@ -9,16 +9,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Represent a request body for creating a TodoItem
+ * Represent a request body for updating a TodoItem
  */
 @Data
 @Builder
-public class CreateTodoItemRequest {
+public class UpdateTodoItemRequest {
 
-    @NotBlank
     private String description;
 
-    @NotNull
     @Future
     private LocalDateTime dueDateTime;
 

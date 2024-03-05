@@ -1,7 +1,8 @@
 package com.assignment.todo.controller;
 
 import com.assignment.todo.dto.TodoItem;
-import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.dto.CreateTodoItemRequest;
+import com.assignment.todo.dto.UpdateTodoItemRequest;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
@@ -68,21 +69,21 @@ public class TodoItemController {
     /**
      * Add a new TodoItem to the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param item  {@link CreateTodoItemRequest}
      * @return newly added {@link TodoItem}
      */
     @Operation(summary = "Add a new TodoItem to the list")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoItem addTodoItem(
-            @Valid @RequestBody TodoItemRequest item) {
+            @Valid @RequestBody CreateTodoItemRequest item) {
         return TodoItemMapper.toDto(todoItemService.addItem(item));
     }
 
     /**
      * Update a TodoItem in the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param item  {@link UpdateTodoItemRequest}
      * @return updated {@link TodoItem}
      * @throws ActionNotAllowedException if the item for the input id is past due
      * @throws ItemNotFoundException if an item for the input id doesn't exist
@@ -95,7 +96,7 @@ public class TodoItemController {
     @PutMapping("/{id}")
     public TodoItem updateTodoItem(
             @Parameter(description = "ID of the TodoItem") @PathVariable Integer id,
-            @RequestBody TodoItemRequest item) throws ActionNotAllowedException, ItemNotFoundException {
+            @Valid @RequestBody UpdateTodoItemRequest item) throws ActionNotAllowedException, ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.updateItem(id, item));
     }
 
