@@ -75,25 +75,25 @@ public class TodoItemServiceImpl implements TodoItemService {
     /**
      * Update a TodoItem in the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param request  {@link TodoItemRequest}
      * @return updated {@link TodoItemEntity}
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      * @throws ActionNotAllowedException if the item for the input id is past due
      */
     @Override
-    public TodoItemEntity updateItem(Integer id, TodoItemRequest item) throws ItemNotFoundException, ActionNotAllowedException {
-        TodoItemEntity itemEntity = todoItemEntityRepository.findById(id)
+    public TodoItemEntity updateItem(Integer id, TodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
+        TodoItemEntity item = todoItemEntityRepository.findById(id)
                 // TODO : Momo : ItemNotFoundException
                 .orElseThrow(() -> new ItemNotFoundException(id));
         // Don't allow updates on PAST_DUE items
-        if (TodoItemStatus.PAST_DUE.name().contentEquals(itemEntity.getStatus())) {
-            log.error("Attempted to update a past due TodoItem id {} with due date {}", id, item.getDueDateTime());
+        if (TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())) {
+            log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
             throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
         }
-        itemEntity.setDescription(item.getDescription());
-        itemEntity.setDueDateTime(item.getDueDateTime());
-        itemEntity.setUpdatedAt(LocalDateTime.now());
-        return todoItemEntityRepository.save(itemEntity);
+        item.setDescription(request.getDescription());
+        item.setDueDateTime(request.getDueDateTime());
+        item.setUpdatedAt(LocalDateTime.now());
+        return todoItemEntityRepository.save(item);
     }
 
     /**

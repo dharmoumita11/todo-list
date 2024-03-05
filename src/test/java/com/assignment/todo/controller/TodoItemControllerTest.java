@@ -16,9 +16,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TodoItemControllerTest extends BaseTestClass {
 
@@ -65,6 +67,14 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
+    void whenGetTodoItemId_thenItemNotFound() throws ItemNotFoundException {
+        when(todoItemService.getItemDetails(1)).thenThrow(ItemNotFoundException.class);
+
+        assertThatThrownBy(() -> todoItemController.getTodoItemDetails(1))
+                .isInstanceOf(ItemNotFoundException.class);
+    }
+
+    @Test
     void whenAddTodoItem_thenSuccess() {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .description("Test Item")
@@ -89,6 +99,22 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
+    void whenUpdateTodoItemId_thenItemNotFound() throws ItemNotFoundException, ActionNotAllowedException {
+        when(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class))).thenThrow(ItemNotFoundException.class);
+
+        assertThatThrownBy(() -> todoItemController.updateTodoItem(1, TodoItemRequest.builder().build()))
+                .isInstanceOf(ItemNotFoundException.class);
+    }
+
+    @Test
+    void whenUpdateTodoItemId_thenActionNotAllowed() throws ItemNotFoundException, ActionNotAllowedException {
+        when(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class))).thenThrow(ActionNotAllowedException.class);
+
+        assertThatThrownBy(() -> todoItemController.updateTodoItem(1, TodoItemRequest.builder().build()))
+                .isInstanceOf(ActionNotAllowedException.class);
+    }
+
+    @Test
     void whenMarkTodoItemAsDone_thenSuccess() throws ItemNotFoundException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
@@ -102,6 +128,14 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
+    void whenMarkTodoItemAsDone_thenItemNotFound() throws ItemNotFoundException {
+        when(todoItemService.markAsDone(1)).thenThrow(ItemNotFoundException.class);
+
+        assertThatThrownBy(() -> todoItemController.markAsDone(1))
+                .isInstanceOf(ItemNotFoundException.class);
+    }
+
+    @Test
     void whenMarkTodoItemAsNotDone_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
@@ -112,6 +146,22 @@ public class TodoItemControllerTest extends BaseTestClass {
         TodoItem newItem = todoItemController.markAsNotDone(1);
         assertThat(newItem.getId()).isEqualTo(1);
         assertThat(newItem.getStatus()).isEqualTo(TodoItemStatus.NOT_DONE.value());
+    }
+
+    @Test
+    void whenMarkTodoItemAsNotDone_thenItemNotFound() throws ItemNotFoundException, ActionNotAllowedException {
+        when(todoItemService.markAsNotDone(1)).thenThrow(ItemNotFoundException.class);
+
+        assertThatThrownBy(() -> todoItemController.markAsNotDone(1))
+                .isInstanceOf(ItemNotFoundException.class);
+    }
+
+    @Test
+    void whenMarkTodoItemAsNotDone_thenActionNotAllowed() throws ItemNotFoundException, ActionNotAllowedException {
+        when(todoItemService.markAsNotDone(1)).thenThrow(ActionNotAllowedException.class);
+
+        assertThatThrownBy(() -> todoItemController.markAsNotDone(1))
+                .isInstanceOf(ActionNotAllowedException.class);
     }
 
     @Test

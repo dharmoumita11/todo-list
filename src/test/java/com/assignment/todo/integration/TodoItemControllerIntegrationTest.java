@@ -3,6 +3,8 @@ package com.assignment.todo.integration;
 import com.assignment.todo.controller.TodoItemController;
 import com.assignment.todo.dal.entity.TodoItemEntity;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +15,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,7 +35,7 @@ public class TodoItemControllerIntegrationTest {
     private TodoItemService todoItemService;
 
     @Test
-    public void whenGetAllTodoItems_thenGetAllTodoItems() throws Exception {
+    void whenGetAllTodoItems_thenGetAllTodoItems() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -42,11 +46,12 @@ public class TodoItemControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/todos")
                         .param("includeAll", "true"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"id\":1, \"description\":\"Updated Todo Item\"}]"));
+                .andExpect(content().json(
+                        "[{\"id\":1, \"description\":\"Updated Todo Item\"}]"));
     }
 
     @Test
-    public void whenGetNotDoneTodoItems_thenGetNotDoneTodoItems() throws Exception {
+    void whenGetNotDoneTodoItems_thenGetNotDoneTodoItems() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -56,11 +61,12 @@ public class TodoItemControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/todos"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"id\":1, \"description\":\"Updated Todo Item\"}]"));
+                .andExpect(content().json(
+                        "[{\"id\":1, \"description\":\"Updated Todo Item\"}]"));
     }
 
     @Test
-    public void whenGetTodoItemId_thenGetTodoItemById() throws Exception {
+    void whenGetTodoItemId_thenGetTodoItemById() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -70,11 +76,22 @@ public class TodoItemControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/todos/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"id\":1, \"description\":\"Updated Todo Item\"}"));
+                .andExpect(content().json(
+                        "{\"id\":1, \"description\":\"Updated Todo Item\"}"));
     }
 
     @Test
-    public void whenPostTodoItem_thenCreateTodoItem() throws Exception {
+    void whenGetTodoItemId_thenItemNotFound() throws Exception {
+        given(todoItemService.getItemDetails(1)).willThrow(ItemNotFoundException.class);
+
+        mockMvc.perform(get("/api/v1/todos/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1\"}"));
+    }
+
+    @Test
+    void whenPostTodoItem_thenCreateTodoItem() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .description("New Todo Item")
                 .status("NOT_DONE")
@@ -85,11 +102,12 @@ public class TodoItemControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"description\":\"New Todo Item\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(content().json("{\"description\":\"New Todo Item\"}"));
+                .andExpect(content().json(
+                        "{\"description\":\"New Todo Item\"}"));
     }
 
     @Test
-    public void whenPutTodoItem_thenUpdateTodoItem() throws Exception {
+    void whenPutTodoItem_thenUpdateTodoItem() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -99,13 +117,40 @@ public class TodoItemControllerIntegrationTest {
 
         mockMvc.perform(put("/api/v1/todos/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"description\":\"Updated Todo Item\"}"))
+                        .content("{\"id\":1, \"description\":\"Updated Todo Item\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"id\":1, \"description\":\"Updated Todo Item\"}"));
+                .andExpect(content().json(
+                        "{\"id\":1, \"description\":\"Updated Todo Item\"}"));
     }
 
     @Test
-    public void whenPatchTodoItemDone_thenUpdateTodoItemStatusToDone() throws Exception {
+    void whenPutTodoItem_thenItemNotFound() throws Exception {
+        given(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class)))
+                .willThrow(ItemNotFoundException.class);
+
+        mockMvc.perform(put("/api/v1/todos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"Updated Todo Item\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1\"}"));
+    }
+
+    @Test
+    void whenPutTodoItem_thenActionNotAllowed() throws Exception {
+        given(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class)))
+                .willThrow(ActionNotAllowedException.class);
+
+        mockMvc.perform(put("/api/v1/todos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"Updated Todo Item\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1\"}"));
+    }
+
+    @Test
+    void whenPatchTodoItemDone_thenUpdateTodoItemStatusToDone() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -115,11 +160,22 @@ public class TodoItemControllerIntegrationTest {
 
         mockMvc.perform(patch("/api/v1/todos/1/done"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"id\":1, \"description\":\"Updated Todo Item\",\"status\":\"done\"}"));
+                .andExpect(content().json(
+                        "{\"id\":1, \"description\":\"Updated Todo Item\",\"status\":\"done\"}"));
     }
 
     @Test
-    public void whenPatchTodoItemNotDone_thenUpdateTodoItemStatusToNotDone() throws Exception {
+    void whenPatchTodoItemDone_thenItemNotFound() throws Exception {
+        given(todoItemService.markAsDone(1)).willThrow(ItemNotFoundException.class);
+
+        mockMvc.perform(patch("/api/v1/todos/1/done"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1/done\"}"));
+    }
+
+    @Test
+    void whenPatchTodoItemNotDone_thenUpdateTodoItemStatusToNotDone() throws Exception {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Updated Todo Item")
@@ -129,11 +185,32 @@ public class TodoItemControllerIntegrationTest {
 
         mockMvc.perform(patch("/api/v1/todos/1/not-done"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"id\":1, \"description\":\"Updated Todo Item\",\"status\":\"not done\"}"));
+                .andExpect(content().json(
+                        "{\"id\":1, \"description\":\"Updated Todo Item\",\"status\":\"not done\"}"));
     }
 
     @Test
-    public void whenDeleteTodoItem_thenDeleteTodoItem() throws Exception {
+    void whenPatchTodoItemNotDone_thenItemNotFound() throws Exception {
+        given(todoItemService.markAsNotDone(1)).willThrow(ItemNotFoundException.class);
+
+        mockMvc.perform(patch("/api/v1/todos/1/not-done"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1/not-done\"}"));
+    }
+
+    @Test
+    void whenPatchTodoItemNotDone_thenActionNotAllowed() throws Exception {
+        given(todoItemService.markAsNotDone(1)).willThrow(ActionNotAllowedException.class);
+
+        mockMvc.perform(patch("/api/v1/todos/1/not-done"))
+                .andExpect(status().isConflict())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1/not-done\"}"));
+    }
+
+    @Test
+    void whenDeleteTodoItem_thenDeleteTodoItem() throws Exception {
         mockMvc.perform(delete("/api/v1/todos/1"))
                 .andExpect(status().isOk());
         verify(todoItemService).deleteItem(1);
