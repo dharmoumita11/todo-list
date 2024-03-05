@@ -9,6 +9,7 @@ import com.assignment.todo.util.TodoItemMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +75,7 @@ public class TodoItemController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoItem addTodoItem(
-            @RequestBody TodoItemRequest item) {
+            @Valid @RequestBody TodoItemRequest item) {
         return TodoItemMapper.toDto(todoItemService.addItem(item));
     }
 

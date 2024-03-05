@@ -13,10 +13,20 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Slf4j
 @Service
 public class TodoItemServiceImpl implements TodoItemService {
+
+    /* Add condition to check for past due items.
+     Check for due_date as well for items who went past due
+     after the last scheduled job run (say 10 seconds before)
+     Note: This is precautionary as currently, the input accepts
+     */
+    private static final Predicate<TodoItemEntity> isPastDueItem = item ->
+            TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())
+                    || item.getDueDateTime().isBefore(LocalDateTime.now());
 
     private final TodoItemEntityRepository todoItemEntityRepository;
 
@@ -86,7 +96,7 @@ public class TodoItemServiceImpl implements TodoItemService {
                 // TODO : Momo : ItemNotFoundException
                 .orElseThrow(() -> new ItemNotFoundException(id));
         // Don't allow updates on PAST_DUE items
-        if (TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())) {
+        if (isPastDueItem.test(item)) {
             log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
             throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
         }
@@ -126,7 +136,7 @@ public class TodoItemServiceImpl implements TodoItemService {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
         // Don't allow PAST_DUE items to be marked as NOT_DONE
-        if (TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())) {
+        if (isPastDueItem.test(item)) {
             log.error("Attempted to mark a past due TodoItem id {} with due date {} as NOT DONE", id, item.getDueDateTime());
             throw new ActionNotAllowedException("Todo item with id " + id + " can't be marked as NOT DONE because it's past due");
         }
