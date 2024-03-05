@@ -2,7 +2,8 @@ package com.assignment.todo.integration;
 
 import com.assignment.todo.controller.TodoItemController;
 import com.assignment.todo.dal.entity.TodoItemEntity;
-import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.dto.CreateTodoItemRequest;
+import com.assignment.todo.dto.UpdateTodoItemRequest;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
@@ -15,12 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -96,14 +95,32 @@ public class TodoItemControllerIntegrationTest {
                 .description("New Todo Item")
                 .status("NOT_DONE")
                 .build();
-        given(todoItemService.addItem(any(TodoItemRequest.class))).willReturn(mockItem);
+        given(todoItemService.addItem(any(CreateTodoItemRequest.class))).willReturn(mockItem);
 
         mockMvc.perform(post("/api/v1/todos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"description\":\"New Todo Item\"}"))
+                        .content("{\"description\":\"New Todo Item\",\"dueDateTime\":\"2050-03-05T21:11:02.021Z\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(content().json(
                         "{\"description\":\"New Todo Item\"}"));
+    }
+    @Test
+    void whenPostTodoItemNoDescription_thenBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"  \",\"dueDateTime\":\"2050-03-06T21:11:02.021Z\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos\",\"message\":\"Invalid Request\",\"messages\":[\"description: 'must not be blank'\"]}"));
+    }
+    @Test
+    void whenPostTodoItemPastDue_thenBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"New Todo Item\",\"dueDateTime\":\"2023-03-06T21:11:02.021Z\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos\",\"message\":\"Invalid Request\",\"messages\":[\"dueDateTime: 'must be a future date'\"]}"));
     }
 
     @Test
@@ -113,11 +130,11 @@ public class TodoItemControllerIntegrationTest {
                 .description("Updated Todo Item")
                 .status("NOT_DONE")
                 .build();
-        given(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class))).willReturn(mockItem);
+        given(todoItemService.updateItem(anyInt(), any(UpdateTodoItemRequest.class))).willReturn(mockItem);
 
         mockMvc.perform(put("/api/v1/todos/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":1, \"description\":\"Updated Todo Item\"}"))
+                        .content("{\"description\":\"Updated Todo Item\",\"dueDateTime\":\"2025-03-06T21:11:02.021Z\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(
                         "{\"id\":1, \"description\":\"Updated Todo Item\"}"));
@@ -125,7 +142,7 @@ public class TodoItemControllerIntegrationTest {
 
     @Test
     void whenPutTodoItem_thenItemNotFound() throws Exception {
-        given(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class)))
+        given(todoItemService.updateItem(anyInt(), any(UpdateTodoItemRequest.class)))
                 .willThrow(ItemNotFoundException.class);
 
         mockMvc.perform(put("/api/v1/todos/1")
@@ -138,7 +155,7 @@ public class TodoItemControllerIntegrationTest {
 
     @Test
     void whenPutTodoItem_thenActionNotAllowed() throws Exception {
-        given(todoItemService.updateItem(anyInt(), any(TodoItemRequest.class)))
+        given(todoItemService.updateItem(anyInt(), any(UpdateTodoItemRequest.class)))
                 .willThrow(ActionNotAllowedException.class);
 
         mockMvc.perform(put("/api/v1/todos/1")
@@ -147,6 +164,16 @@ public class TodoItemControllerIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(content().json(
                         "{\"path\":\"/api/v1/todos/1\"}"));
+    }
+
+    @Test
+    void whenPutTodoItem_thenBadRequest() throws Exception {
+        mockMvc.perform(put("/api/v1/todos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"Updated Todo Item\",\"dueDateTime\":\"2023-03-06T21:11:02.021Z\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1\",\"message\":\"Invalid Request\",\"messages\":[\"dueDateTime: 'must be a future date'\"]}"));
     }
 
     @Test

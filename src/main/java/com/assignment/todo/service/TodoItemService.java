@@ -1,7 +1,8 @@
 package com.assignment.todo.service;
 
 import com.assignment.todo.dal.entity.TodoItemEntity;
-import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.dto.CreateTodoItemRequest;
+import com.assignment.todo.dto.UpdateTodoItemRequest;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
 
@@ -29,18 +30,18 @@ public interface TodoItemService {
     /**
      * Add a new TodoItem to the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param item  {@link CreateTodoItemRequest}
      * @return newly added {@link TodoItemEntity}
      */
-    TodoItemEntity addItem(TodoItemRequest item);
+    TodoItemEntity addItem(CreateTodoItemRequest item);
 
     /**
      * Update a TodoItem in the list
      *
-     * @param item  {@link TodoItemRequest}
+     * @param item  {@link UpdateTodoItemRequest}
      * @return updated {@link TodoItemEntity}
      */
-    TodoItemEntity updateItem(Integer id, TodoItemRequest item) throws ItemNotFoundException, ActionNotAllowedException;
+    TodoItemEntity updateItem(Integer id, UpdateTodoItemRequest item) throws ItemNotFoundException, ActionNotAllowedException;
 
     /**
      * Mark a TodoItem as 'DONE'

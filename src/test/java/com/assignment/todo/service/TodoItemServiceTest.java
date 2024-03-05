@@ -4,7 +4,8 @@ import com.assignment.todo.BaseTestClass;
 import com.assignment.todo.constants.TodoItemStatus;
 import com.assignment.todo.dal.dao.TodoItemEntityRepository;
 import com.assignment.todo.dal.entity.TodoItemEntity;
-import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.dto.CreateTodoItemRequest;
+import com.assignment.todo.dto.UpdateTodoItemRequest;
 import com.assignment.todo.exception.ActionNotAllowedException;
 import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.impl.TodoItemServiceImpl;
@@ -81,7 +82,7 @@ public class TodoItemServiceTest extends BaseTestClass {
                 .description("Test Item").build();
         when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
 
-        TodoItemEntity newItem = todoItemService.addItem(TodoItemRequest.builder().build());
+        TodoItemEntity newItem = todoItemService.addItem(CreateTodoItemRequest.builder().build());
 
         assertThat(newItem.getDescription()).isEqualTo("Test Item");
     }
@@ -93,7 +94,7 @@ public class TodoItemServiceTest extends BaseTestClass {
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
         when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
 
-        TodoItemEntity newItem = todoItemService.updateItem(1, TodoItemRequest.builder()
+        TodoItemEntity newItem = todoItemService.updateItem(1, UpdateTodoItemRequest.builder()
                 .description("Update Item").dueDateTime(LocalDateTime.now()).build());
 
         assertThat(newItem.getDescription()).isEqualTo("Update Item");
@@ -104,7 +105,7 @@ public class TodoItemServiceTest extends BaseTestClass {
     void whenUpdateInvalidItem_thenItemNotFound() {
         when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoItemService.updateItem(1, TodoItemRequest.builder().build()))
+        assertThatThrownBy(() -> todoItemService.updateItem(1, UpdateTodoItemRequest.builder().build()))
                 .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
     }
 
@@ -114,7 +115,21 @@ public class TodoItemServiceTest extends BaseTestClass {
                 .id(1).description("Test Item").status(TodoItemStatus.PAST_DUE.name()).build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
 
-        assertThatThrownBy(() -> todoItemService.updateItem(1, TodoItemRequest.builder().build()))
+        assertThatThrownBy(() -> todoItemService.updateItem(1, UpdateTodoItemRequest.builder().build()))
+                .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
+    }
+
+    @Test
+    void whenUpdate30SecondPastDueItem_thenActionNotAllowed() {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .dueDateTime(LocalDateTime.now().minusSeconds(30))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        assertThatThrownBy(() -> todoItemService.updateItem(1, UpdateTodoItemRequest.builder().build()))
                 .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
     }
 
@@ -166,6 +181,20 @@ public class TodoItemServiceTest extends BaseTestClass {
     void whenMarkPastDueItemAsNotDone_thenActionNotAllowed() {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.PAST_DUE.name()).build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        assertThatThrownBy(() -> todoItemService.markAsNotDone(1))
+                .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
+    }
+
+    @Test
+    void whenMark30SecondPastDueItemAsNotDone_thenActionNotAllowed() {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .dueDateTime(LocalDateTime.now().minusSeconds(30))
+                .build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
 
         assertThatThrownBy(() -> todoItemService.markAsNotDone(1))
