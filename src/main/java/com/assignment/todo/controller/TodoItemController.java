@@ -2,6 +2,8 @@ package com.assignment.todo.controller;
 
 import com.assignment.todo.dto.TodoItem;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
 import com.assignment.todo.util.TodoItemMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +51,7 @@ public class TodoItemController {
      *
      * @param id  ID of the TodoItem
      * @return {@link TodoItem} for the input ID
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Operation(summary = "Get the details of a TodoItem",
             responses = {
@@ -56,7 +59,8 @@ public class TodoItemController {
             @ApiResponse(responseCode = "404", description = "TodoItem not found") })
     @GetMapping("/{id}")
     public TodoItem getTodoItemDetails(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id) {
+            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            throws ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.getItemDetails(id));
     }
 
@@ -79,16 +83,18 @@ public class TodoItemController {
      *
      * @param item  {@link TodoItemRequest}
      * @return updated {@link TodoItem}
+     * @throws ActionNotAllowedException if the item for the input id is past due
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Operation(summary = "Update a TodoItem in the list",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Updated the TodoItem"),
                     @ApiResponse(responseCode = "404", description = "TodoItem not found"),
-                    @ApiResponse(responseCode = "450", description = "Update not allowed") })
+                    @ApiResponse(responseCode = "409", description = "Update not allowed") })
     @PutMapping("/{id}")
     public TodoItem updateTodoItem(
             @Parameter(description = "ID of the TodoItem") @PathVariable Integer id,
-            @RequestBody TodoItemRequest item) {
+            @RequestBody TodoItemRequest item) throws ActionNotAllowedException, ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.updateItem(id, item));
     }
 
@@ -97,6 +103,7 @@ public class TodoItemController {
      *
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItem}
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Operation(summary = "Mark a TodoItem as DONE",
             responses = {
@@ -104,7 +111,8 @@ public class TodoItemController {
                     @ApiResponse(responseCode = "404", description = "TodoItem not found") })
     @PatchMapping("/{id}/done")
     public TodoItem markAsDone(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id) {
+            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            throws ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.markAsDone(id));
     }
 
@@ -113,15 +121,18 @@ public class TodoItemController {
      *
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItem}
+     * @throws ActionNotAllowedException if the item for the input id is past due
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Operation(summary = "Mark a TodoItem as NOT DONE",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Updated the TodoItem"),
                     @ApiResponse(responseCode = "404", description = "TodoItem not found"),
-                    @ApiResponse(responseCode = "450", description = "Action not allowed") })
+                    @ApiResponse(responseCode = "409", description = "Action not allowed") })
     @PatchMapping("/{id}/not-done")
     public TodoItem markAsNotDone(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id) {
+            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            throws ActionNotAllowedException, ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.markAsNotDone(id));
     }
 

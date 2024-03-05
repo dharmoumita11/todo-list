@@ -4,13 +4,17 @@ import com.assignment.todo.constants.TodoItemStatus;
 import com.assignment.todo.dal.dao.TodoItemEntityRepository;
 import com.assignment.todo.dal.entity.TodoItemEntity;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.TodoItemService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class TodoItemServiceImpl implements TodoItemService {
 
@@ -41,12 +45,13 @@ public class TodoItemServiceImpl implements TodoItemService {
      * Get the details of a TodoItem
      *
      * @param id  ID of the TodoItem
-     * @return {@link TodoItemEntity} for the input ID
+     * @return {@link TodoItemEntity} for the input id
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Override
-    public TodoItemEntity getItemDetails(Integer id) {
+    public TodoItemEntity getItemDetails(Integer id) throws ItemNotFoundException {
         return todoItemEntityRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid to-do item ID: " + id));
+                .orElseThrow(() -> new ItemNotFoundException(id));
     }
 
     /**
@@ -72,17 +77,18 @@ public class TodoItemServiceImpl implements TodoItemService {
      *
      * @param item  {@link TodoItemRequest}
      * @return updated {@link TodoItemEntity}
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
+     * @throws ActionNotAllowedException if the item for the input id is past due
      */
     @Override
-    public TodoItemEntity updateItem(Integer id, TodoItemRequest item) {
+    public TodoItemEntity updateItem(Integer id, TodoItemRequest item) throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity itemEntity = todoItemEntityRepository.findById(id)
                 // TODO : Momo : ItemNotFoundException
-                .orElseThrow(() -> new IllegalArgumentException("Invalid to-do item ID: " + id));
+                .orElseThrow(() -> new ItemNotFoundException(id));
         // Don't allow updates on PAST_DUE items
         if (TodoItemStatus.PAST_DUE.name().contentEquals(itemEntity.getStatus())) {
-            // log error
-            // throw custom not allowed
-            throw new RuntimeException();
+            log.error("Attempted to update a past due TodoItem id {} with due date {}", id, item.getDueDateTime());
+            throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
         }
         itemEntity.setDescription(item.getDescription());
         itemEntity.setDueDateTime(item.getDueDateTime());
@@ -95,11 +101,12 @@ public class TodoItemServiceImpl implements TodoItemService {
      *
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItemEntity}
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Override
-    public TodoItemEntity markAsDone(Integer id) {
+    public TodoItemEntity markAsDone(Integer id) throws ItemNotFoundException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid to-do item ID: " + id));
+                .orElseThrow(() -> new ItemNotFoundException(id));
         item.setStatus(TodoItemStatus.DONE.name());
         item.setDoneAt(LocalDateTime.now());
         item.setUpdatedAt(LocalDateTime.now());
@@ -111,16 +118,17 @@ public class TodoItemServiceImpl implements TodoItemService {
      *
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItemEntity}
+     * @throws ItemNotFoundException if an item for the input id doesn't exist
+     * @throws ActionNotAllowedException if the item for the input id is past due
      */
     @Override
-    public TodoItemEntity markAsNotDone(Integer id) {
+    public TodoItemEntity markAsNotDone(Integer id) throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid to-do item ID: " + id));
+                .orElseThrow(() -> new ItemNotFoundException(id));
         // Don't allow PAST_DUE items to be marked as NOT_DONE
         if (TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())) {
-            // log error
-            // throw custom not allowed
-            throw new RuntimeException();
+            log.error("Attempted to mark a past due TodoItem id {} with due date {} as NOT DONE", id, item.getDueDateTime());
+            throw new ActionNotAllowedException("Todo item with id " + id + " can't be marked as NOT DONE because it's past due");
         }
         item.setStatus(TodoItemStatus.NOT_DONE.name());
         item.setDoneAt(null); // Clear the done date-time

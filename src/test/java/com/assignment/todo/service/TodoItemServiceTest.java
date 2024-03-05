@@ -5,6 +5,8 @@ import com.assignment.todo.constants.TodoItemStatus;
 import com.assignment.todo.dal.dao.TodoItemEntityRepository;
 import com.assignment.todo.dal.entity.TodoItemEntity;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.impl.TodoItemServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -53,7 +55,7 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
-    void whenGetItemById_thenSuccess() {
+    void whenGetItemById_thenSuccess() throws ItemNotFoundException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
@@ -76,20 +78,21 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
-    void whenUpdateItem_thenSuccess() {
+    void whenUpdateItem_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.NOT_DONE.name()).build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
         when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
 
-        TodoItemEntity newItem = todoItemService.updateItem(1, TodoItemRequest.builder().description("Update Item").dueDateTime(LocalDateTime.now()).build());
+        TodoItemEntity newItem = todoItemService.updateItem(1, TodoItemRequest.builder()
+                .description("Update Item").dueDateTime(LocalDateTime.now()).build());
 
         assertThat(newItem.getDescription()).isEqualTo("Update Item");
         assertThat(newItem.getDueDateTime()).isEqualTo(mockItem.getDueDateTime());
     }
 
     @Test
-    void whenMarkItemAsDone_thenSuccess() {
+    void whenMarkItemAsDone_thenSuccess() throws ItemNotFoundException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.NOT_DONE.name()).build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
@@ -103,7 +106,7 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
-    void whenMarkItemAsNotDone_thenSuccess() {
+    void whenMarkItemAsNotDone_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.DONE.name()).doneAt(LocalDateTime.now()).build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));

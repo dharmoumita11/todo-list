@@ -9,3 +9,14 @@ However, to prevent deletion by mistake, an additional confirmation prompt can b
 ***
 - Add authentication for swagger
 - use custom paths for swagger-ui as well as api-docs
+
+***
+Error handling can be improved by adding
+- ErrorCode Enum containing
+  - errorCode
+- default message and/or explanation
+- A default or parent custom exception containing
+  - errorCode
+  - errorMessage
+  - detailedMessage
+- All the other custom exceptions will extend this default or parent custom exception 
