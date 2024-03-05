@@ -2,6 +2,8 @@ package com.assignment.todo.service;
 
 import com.assignment.todo.dal.entity.TodoItemEntity;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 
 import java.util.List;
 
@@ -22,7 +24,7 @@ public interface TodoItemService {
      * @param id  ID of the TodoItem
      * @return {@link TodoItemEntity} for the input ID
      */
-    TodoItemEntity getItemDetails(Integer id);
+    TodoItemEntity getItemDetails(Integer id) throws ItemNotFoundException;
 
     /**
      * Add a new TodoItem to the list
@@ -38,7 +40,7 @@ public interface TodoItemService {
      * @param item  {@link TodoItemRequest}
      * @return updated {@link TodoItemEntity}
      */
-    TodoItemEntity updateItem(Integer id, TodoItemRequest item);
+    TodoItemEntity updateItem(Integer id, TodoItemRequest item) throws ItemNotFoundException, ActionNotAllowedException;
 
     /**
      * Mark a TodoItem as 'DONE'
@@ -46,7 +48,7 @@ public interface TodoItemService {
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItemEntity}
      */
-    TodoItemEntity markAsDone(Integer id);
+    TodoItemEntity markAsDone(Integer id) throws ItemNotFoundException;
 
     /**
      * Mark a TodoItem as 'NOT DONE'
@@ -54,7 +56,7 @@ public interface TodoItemService {
      * @param id  ID of the TodoItem
      * @return updated {@link TodoItemEntity}
      */
-    TodoItemEntity markAsNotDone(Integer id);
+    TodoItemEntity markAsNotDone(Integer id) throws ItemNotFoundException, ActionNotAllowedException;
 
     /**
      * Delete a TodoItem

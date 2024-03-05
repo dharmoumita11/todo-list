@@ -5,6 +5,8 @@ import com.assignment.todo.constants.TodoItemStatus;
 import com.assignment.todo.dal.entity.TodoItemEntity;
 import com.assignment.todo.dto.TodoItem;
 import com.assignment.todo.dto.TodoItemRequest;
+import com.assignment.todo.exception.ActionNotAllowedException;
+import com.assignment.todo.exception.ItemNotFoundException;
 import com.assignment.todo.service.impl.TodoItemServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -51,7 +53,7 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
-    void whenGetTodoItemId_thenSuccess() {
+    void whenGetTodoItemId_thenSuccess() throws ItemNotFoundException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Test Item")
@@ -74,7 +76,7 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
-    void whenUpdateTodoItem_thenSuccess() {
+    void whenUpdateTodoItem_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Test Item")
@@ -87,7 +89,7 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
-    void whenMarkTodoItemAsDone_thenSuccess() {
+    void whenMarkTodoItemAsDone_thenSuccess() throws ItemNotFoundException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Test Item")
@@ -100,7 +102,7 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
-    void whenMarkTodoItemAsNotDone_thenSuccess() {
+    void whenMarkTodoItemAsNotDone_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1)
                 .description("Test Item")
