@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represent a request body for updating a TodoItem
+ */
 @Data
 @Builder
 public class TodoItemRequest {

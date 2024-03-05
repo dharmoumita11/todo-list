@@ -1,5 +1,8 @@
 package com.assignment.todo.constants;
 
+/**
+ * Represents all possible statuses of a TodoItem
+ */
 public enum TodoItemStatus {
 
     NOT_DONE ("not done"),

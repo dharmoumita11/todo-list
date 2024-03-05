@@ -15,6 +15,11 @@ public class TodoItemScheduler {
         this.todoItemService = todoItemService;
     }
 
+    /**
+     * Scheduled job to run every minute
+     * <p>Checks all TodoItems that are not in 'DONE' state,
+     * and updates their state to 'PAST DUE' if it's past their due date.</p>
+     */
     //@Scheduled(cron = "0 * * * * *") // Runs every minute, adjust as necessary
     @Scheduled(fixedDelay = 60000) // Every minute
     public void updatePastDueItemsStatus() {

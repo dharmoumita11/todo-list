@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Representation of a TodoItem
+ */
 @Data
 @Builder
 public class TodoItem {
