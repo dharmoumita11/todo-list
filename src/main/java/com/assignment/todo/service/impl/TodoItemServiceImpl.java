@@ -42,7 +42,7 @@ public class TodoItemServiceImpl implements TodoItemService {
                 TodoItemEntity.builder()
                         .description(item.getDescription())
                         .dueDateTime(item.getDueDateTime())
-                        .status(TodoItemStatus.NOT_DONE.value())
+                        .status(TodoItemStatus.NOT_DONE.name())
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build());
