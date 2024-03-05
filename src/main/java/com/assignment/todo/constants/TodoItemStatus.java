@@ -16,7 +16,7 @@ public enum TodoItemStatus {
         return this.value;
     }
 
-    public TodoItemStatus from(String input) {
+    public static TodoItemStatus from(String input) {
         for (TodoItemStatus status : values()) {
             if (status.value.equalsIgnoreCase(input)) {
                 return status;
