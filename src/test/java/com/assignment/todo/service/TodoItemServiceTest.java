@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,6 +68,14 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
+    void whenGetItemByInvalidId_thenItemNotFound() {
+        when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoItemService.getItemDetails(1))
+                .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
+    }
+
+    @Test
     void whenAddItem_thenSuccess() {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .description("Test Item").build();
@@ -92,6 +101,24 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
+    void whenUpdateInvalidItem_thenItemNotFound() {
+        when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoItemService.updateItem(1, TodoItemRequest.builder().build()))
+                .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
+    }
+
+    @Test
+    void whenUpdatePastDueItem_thenActionNotAllowed() {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1).description("Test Item").status(TodoItemStatus.PAST_DUE.name()).build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        assertThatThrownBy(() -> todoItemService.updateItem(1, TodoItemRequest.builder().build()))
+                .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
+    }
+
+    @Test
     void whenMarkItemAsDone_thenSuccess() throws ItemNotFoundException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.NOT_DONE.name()).build();
@@ -106,6 +133,14 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
+    void whenMarkInvalidItemAsDone_thenItemNotFound() {
+        when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoItemService.markAsDone(1))
+                .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
+    }
+
+    @Test
     void whenMarkItemAsNotDone_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.DONE.name()).doneAt(LocalDateTime.now()).build();
@@ -117,6 +152,24 @@ public class TodoItemServiceTest extends BaseTestClass {
         assertThat(newItem.getStatus()).isEqualTo(TodoItemStatus.NOT_DONE.name());
         assertThat(newItem.getDoneAt()).isNull();
         assertThat(newItem.getUpdatedAt()).isEqualTo(mockItem.getUpdatedAt());
+    }
+
+    @Test
+    void whenMarkInvalidItemAsNotDone_thenItemNotFound() {
+        when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoItemService.markAsNotDone(1))
+                .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
+    }
+
+    @Test
+    void whenMarkPastDueItemAsNotDone_thenActionNotAllowed() {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1).description("Test Item").status(TodoItemStatus.PAST_DUE.name()).build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        assertThatThrownBy(() -> todoItemService.markAsNotDone(1))
+                .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
     }
 
     @Test
