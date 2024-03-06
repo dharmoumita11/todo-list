@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  todo-list:
+    container_name: todo-list
+    build:
+      context: .
+    image: todo-list-img
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./src:/app/src"
+      - "./build.gradle:/app/build.gradle"
+      - "./gradle.properties:/app/gradle.properties"
+      - "./settings.gradle:/app/settings.gradle"
+      - "./logs:/app/logs"
+###    environment:
+###      - SPRING_PROFILES_ACTIVE=dev
