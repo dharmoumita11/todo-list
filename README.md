@@ -108,6 +108,8 @@ To run tests, run the following command
 Once the application has started, you can use the application via the Swagger UI.
 
 `http://localhost:8080/todo/swagger-ui/index.html`
+
+
 ## Production Readiness
 
 * Add sonar or jacoco for test coverage
@@ -125,7 +127,10 @@ Once the application has started, you can use the application via the Swagger UI
 * Update DB with user and password.
 * Configuration management for secrets.
 * Externalized configuration for environment specific variables
-* CI/CD pipeline
+* CI/CD pipeline including test automation
+* End-to-end thorough testing in different environments
+
+
 ## Roadmap
 
 * Implement Repository pattern to make changing DB more flexible, especially in case we want to switch to NoSQL in future
