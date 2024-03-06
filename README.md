@@ -124,6 +124,7 @@ Once the application has started, you can use the application via the Swagger UI
 * Implement backup and restoration plan
 * Add actuator for health check
 * Add monitoring
+* Switch to a persistent DB
 * Update DB with user and password.
 * Configuration management for secrets.
 * Externalized configuration for environment specific variables
