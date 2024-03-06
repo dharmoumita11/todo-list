@@ -1,6 +1,6 @@
 CREATE TABLE todo_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    description VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
     status VARCHAR(255) NOT NULL DEFAULT 'NOT_DONE',
     due_date_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     done_at DATETIME,

@@ -64,7 +64,7 @@ public interface TodoItemService {
      *
      * @param id  ID of the TodoItem
      */
-    void deleteItem(Integer id);
+    void deleteItem(Integer id) throws ItemNotFoundException;
 
     /**
      * Check for Due Date of TodoItems with status other than 'DONE'
