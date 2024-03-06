@@ -14,7 +14,9 @@ A backend service allowing basic management of a simple to-do list.
 * Mark an item as 'done'
 * Mark an item in 'done' state as 'not done'
 * Scheduler to update status of items that are past the due date to 'past due'
-* Cross platform (with docker)
+* Cross-platform (with docker)
+* Logging ( Refer to `./logs/todo-list-logger.log` )
+* Swagger documentation
 
 
 ## Assumptions
@@ -24,12 +26,12 @@ A backend service allowing basic management of a simple to-do list.
 * DueDateTime must be in the future when adding or updating
 * Description and DueDateTime are mandatory for creating a Todo item
 * Either description or DueDateTime or both can be updated for a Todo item. If the update request doesn't have any data to update, the item is returned as is.
-* 'Past due' items can only be marked done (_I think even if an item is past due, user should be able to mark it as done_). No other operations allowed.
 * An item can be marked as 'not done' only if it were in 'done' state.
 * Attempting to mark a 'not done' item as 'not done' again will return the same item.
 * Attempting to mark a 'done' item as 'done' again will return the same item.
 * GET API will by default retrieve all items that are in 'not done' or 'past due' state. (_since 'past due' state also represents a pending state_)
-* Allow deletion of items unrestricted assuming, an item might not be relevant anymore for the user, deletion should be allowed. To prevent deletion of an item by mistake, an additional confirmation prompt can be added on the front end.
+* 'Past due' items can only be marked done (_I think even if an item is past due, user should be able to mark it as done_).
+* Allow unrestricted deletion of items, assuming an item, including 'past due' items, might not be relevant anymore for the user or user just wants to clean up, deletion should be allowed. (_To prevent deletion of an item by mistake, an additional confirmation prompt can be added on the front end_)
 
 
 ## Tech Stack
@@ -39,6 +41,7 @@ A backend service allowing basic management of a simple to-do list.
 * H2 Database 2.1
 * SpringDoc OpenAPI 2.3.0
 * Lombok 1.18
+* Logback
 * JUnit 5
 * Gradle 8.5
 * Docker
