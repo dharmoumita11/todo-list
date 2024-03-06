@@ -12,6 +12,10 @@ spring:
   h2:
     console:
       enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+    generate-ddl: false
 springdoc:
   swagger-ui:
     operationsSorter: method
