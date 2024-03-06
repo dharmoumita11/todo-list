@@ -14,15 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TodoItemServiceTest extends BaseTestClass {
 
@@ -36,7 +34,7 @@ public class TodoItemServiceTest extends BaseTestClass {
     void whenGetAllItems_thenSuccess() {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").build();
-        when(todoItemRepository.findAll()).thenReturn(Collections.singletonList(mockItem));
+        when(todoItemRepository.findAll()).thenReturn(List.of(mockItem));
 
         List<TodoItemEntity> newItems = todoItemService.getAllItems(true);
 
@@ -48,7 +46,7 @@ public class TodoItemServiceTest extends BaseTestClass {
     void whenGetNotDoneItems_thenSuccess() {
         TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").build();
-        when(todoItemRepository.findAllByStatusNot(TodoItemStatus.DONE.name())).thenReturn(Collections.singletonList(mockItem));
+        when(todoItemRepository.findAllByStatusNot(TodoItemStatus.DONE.name())).thenReturn(List.of(mockItem));
 
         List<TodoItemEntity> newItems = todoItemService.getAllItems(false);
 
@@ -88,17 +86,63 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
-    void whenUpdateItem_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
+    void whenUpdateItemDescription_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity mockItem = TodoItemEntity.builder()
-                .id(1).description("Test Item").status(TodoItemStatus.NOT_DONE.name()).build();
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .dueDateTime(LocalDateTime.of(2030, 12, 31, 14, 15))
+                .updatedAt(LocalDateTime.of(2023, 12, 31, 14, 15))
+                .build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
         when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
 
         TodoItemEntity newItem = todoItemService.updateItem(1, UpdateTodoItemRequest.builder()
-                .description("Update Item").dueDateTime(LocalDateTime.now()).build());
+                .description("Update Item").build());
 
         assertThat(newItem.getDescription()).isEqualTo("Update Item");
+        assertThat(newItem.getDueDateTime()).isEqualTo(LocalDateTime.of(2030, 12, 31, 14, 15));
+        assertThat(newItem.getUpdatedAt()).isNotEqualTo(LocalDateTime.of(2023, 12, 31, 14, 15));
+    }
+
+    @Test
+    void whenUpdateItemDueDate_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .dueDateTime(LocalDateTime.now().plusDays(1))
+                .updatedAt(LocalDateTime.of(2023, 12, 31, 14, 15))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+        when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
+
+        TodoItemEntity newItem = todoItemService.updateItem(
+                1, UpdateTodoItemRequest.builder().dueDateTime(LocalDateTime.of(2030, 12, 31, 14, 15)).build());
+
+        assertThat(newItem.getDescription()).isEqualTo("Test Item");
+        assertThat(newItem.getDueDateTime()).isEqualTo(LocalDateTime.of(2030, 12, 31, 14, 15));
+        assertThat(newItem.getUpdatedAt()).isNotEqualTo(LocalDateTime.of(2023, 12, 31, 14, 15));
+    }
+
+    @Test
+    void whenUpdateItemNoData_thenUpdateNothing() throws ItemNotFoundException, ActionNotAllowedException {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .dueDateTime(LocalDateTime.now().plusDays(1))
+                .updatedAt(LocalDateTime.of(2023, 12, 31, 14, 15))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+        when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
+
+        TodoItemEntity newItem = todoItemService.updateItem(
+                1, UpdateTodoItemRequest.builder().build());
+
+        assertThat(newItem.getDescription()).isEqualTo("Test Item");
         assertThat(newItem.getDueDateTime()).isEqualTo(mockItem.getDueDateTime());
+        assertThat(newItem.getUpdatedAt()).isEqualTo(LocalDateTime.of(2023, 12, 31, 14, 15));
     }
 
     @Test
@@ -148,6 +192,17 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
+    void whenMarkDoneItemAsDone_thenSuccess() throws ItemNotFoundException {
+        final TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1).description("Test Item").status(TodoItemStatus.DONE.name()).build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        todoItemService.markAsDone(1);
+
+        verify(todoItemRepository, never()).save(mockItem);
+    }
+
+    @Test
     void whenMarkInvalidItemAsDone_thenItemNotFound() {
         when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
 
@@ -158,7 +213,12 @@ public class TodoItemServiceTest extends BaseTestClass {
     @Test
     void whenMarkItemAsNotDone_thenSuccess() throws ItemNotFoundException, ActionNotAllowedException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
-                .id(1).description("Test Item").status(TodoItemStatus.DONE.name()).doneAt(LocalDateTime.now()).build();
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.DONE.name())
+                .doneAt(LocalDateTime.now())
+                .dueDateTime(LocalDateTime.of(2050, 12, 31, 14, 15))
+                .build();
         when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
         when(todoItemRepository.save(any(TodoItemEntity.class))).thenReturn(mockItem);
 
@@ -167,6 +227,22 @@ public class TodoItemServiceTest extends BaseTestClass {
         assertThat(newItem.getStatus()).isEqualTo(TodoItemStatus.NOT_DONE.name());
         assertThat(newItem.getDoneAt()).isNull();
         assertThat(newItem.getUpdatedAt()).isEqualTo(mockItem.getUpdatedAt());
+    }
+
+    @Test
+    void whenMarkNotDoneItemAsNotDone_thenDoNothing() throws ItemNotFoundException, ActionNotAllowedException {
+        final TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .doneAt(LocalDateTime.now())
+                .dueDateTime(LocalDateTime.of(2050, 12, 31, 14, 15))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        todoItemService.markAsNotDone(1);
+
+        verify(todoItemRepository, never()).save(mockItem);
     }
 
     @Test
@@ -204,7 +280,32 @@ public class TodoItemServiceTest extends BaseTestClass {
     @Test
     void whenDeleteItem() {
         todoItemService.deleteItem(1);
-        verify(todoItemRepository).deleteById(1);
+        verify(todoItemRepository, times(1)).deleteById(1);
+    }
+
+    @Test
+    void whenCheckAndUpdateStatusForPastDueItems_thenUpdateSuccess() {
+        final TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .doneAt(LocalDateTime.now())
+                .dueDateTime(LocalDateTime.of(2024, 3, 5, 14, 15))
+                .build();
+        when(todoItemRepository.findAllByStatusAndDueDateTimeLessThan(anyString(), any())).thenReturn(List.of(mockItem));
+
+        todoItemService.checkAndUpdateStatusForPastDueItems();
+
+        verify(todoItemRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void whenCheckAndUpdateStatusForPastDueItems_thenNothingToUpdate() {
+        when(todoItemRepository.findAllByStatusAndDueDateTimeLessThan(anyString(), any())).thenReturn(List.of());
+
+        todoItemService.checkAndUpdateStatusForPastDueItems();
+
+        verify(todoItemRepository, never()).saveAll(any());
     }
 
 }
