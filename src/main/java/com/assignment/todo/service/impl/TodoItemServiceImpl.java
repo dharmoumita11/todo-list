@@ -104,13 +104,15 @@ public class TodoItemServiceImpl implements TodoItemService {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
 
-        // updates on PAST_DUE items not allowed
-        if (isPastDueItem.test(item)) {
-            log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
-            throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
-        } else if (isDoneItem.test(item)) {
+        if (isDoneItem.test(item)) {
+            // updates on DONE items not allowed
             log.error("Attempted to update a done TodoItem id {} with done date {}", id, item.getDoneAt());
             throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's already done");
+
+        } else if (isPastDueItem.test(item)) {
+            // updates on PAST_DUE items not allowed
+            log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
+            throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
         }
         boolean updated = false;
         if (StringUtils.hasText(request.getDescription())) {

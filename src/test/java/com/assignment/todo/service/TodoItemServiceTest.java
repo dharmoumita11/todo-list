@@ -178,6 +178,20 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
+    void whenUpdateDoneItem_thenActionNotAllowed() {
+        TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.DONE.name())
+                .dueDateTime(LocalDateTime.of(2023, 12, 31, 14, 15))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
+        assertThatThrownBy(() -> todoItemService.updateItem(1, UpdateTodoItemRequest.builder().build()))
+                .isInstanceOf(ActionNotAllowedException.class).hasMessageContaining("Todo item with id 1");
+    }
+
+    @Test
     void whenMarkItemAsDone_thenSuccess() throws ItemNotFoundException {
         final TodoItemEntity mockItem = TodoItemEntity.builder()
                 .id(1).description("Test Item").status(TodoItemStatus.NOT_DONE.name()).build();
