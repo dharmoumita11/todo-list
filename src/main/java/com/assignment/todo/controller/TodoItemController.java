@@ -30,14 +30,14 @@ public class TodoItemController {
     }
 
     /**
-     * Get all the TodoItems
+     * Get all the pending TodoItems with an option to retrieve all items
      *
      * @param includeAll  fetch all the TodoItems if set to true,
      *                    otherwise fetch the TodoItems which are not done by default
      *
      * @return List of {@link TodoItem}
      */
-    @Operation(summary = "Get all those TodoItems that are not DONE")
+    @Operation(summary = "Get all the pending TodoItems with an option to retrieve all items")
     @GetMapping
     public List<TodoItem> getAllNotDoneItems(
             @Parameter(description = "- true, get all the TodoItems \n" +
