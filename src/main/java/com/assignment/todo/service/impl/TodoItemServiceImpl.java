@@ -39,7 +39,7 @@ public class TodoItemServiceImpl implements TodoItemService {
     }
 
     /**
-     * Get all the TodoItems
+     * Get all pending TodoItems OR retrieve all items
      *
      * @param includeAll  fetch all the TodoItems if set to true,
      *                    otherwise fetch the TodoItems which are not done by default
