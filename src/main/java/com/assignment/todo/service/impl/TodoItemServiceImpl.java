@@ -11,9 +11,11 @@ import com.assignment.todo.service.TodoItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 @Slf4j
@@ -45,6 +47,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public List<TodoItemEntity> getAllItems(final boolean includeAll) {
+        log.info("Get All Items : {}", includeAll);
         if (includeAll) {
             return todoItemEntityRepository.findAll();
         } else {
@@ -61,6 +64,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public TodoItemEntity getItemDetails(Integer id) throws ItemNotFoundException {
+        log.info("Get details for item id {}", id);
         return todoItemEntityRepository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
     }
@@ -73,6 +77,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public TodoItemEntity addItem(CreateTodoItemRequest item) {
+        log.info("Add new item with description : {}", item.getDescription());
         return todoItemEntityRepository.save(
                 TodoItemEntity.builder()
                         .description(item.getDescription())
@@ -93,18 +98,35 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public TodoItemEntity updateItem(Integer id, UpdateTodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
+        log.info("Update item id {}", id);
         TodoItemEntity item = todoItemEntityRepository.findById(id)
-                // TODO : Momo : ItemNotFoundException
                 .orElseThrow(() -> new ItemNotFoundException(id));
-        // Don't allow updates on PAST_DUE items
+
+        // updates on PAST_DUE items not allowed
         if (isPastDueItem.test(item)) {
             log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
             throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
         }
-        item.setDescription(request.getDescription());
-        item.setDueDateTime(request.getDueDateTime());
-        item.setUpdatedAt(LocalDateTime.now());
-        return todoItemEntityRepository.save(item);
+        boolean updated = false;
+        if (StringUtils.hasText(request.getDescription())) {
+            log.info("Updating description of item id {}", id);
+            item.setDescription(request.getDescription());
+            updated = true;
+        }
+        if (Objects.nonNull(request.getDueDateTime())) {
+            log.info("Updating due date time of item id {}", id);
+            item.setDueDateTime(request.getDueDateTime());
+            updated = true;
+        }
+        if (updated) {
+            item.setUpdatedAt(LocalDateTime.now());
+            return todoItemEntityRepository.save(item);
+        } else {
+            log.info("Nothing to update for item id {}", id);
+            // TODO: Add a constraint to the request to check
+            //  if the request has any data to update, if not, return 400
+            return item; // for now returning the item as fetched
+        }
     }
 
     /**
@@ -118,10 +140,17 @@ public class TodoItemServiceImpl implements TodoItemService {
     public TodoItemEntity markAsDone(Integer id) throws ItemNotFoundException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
-        item.setStatus(TodoItemStatus.DONE.name());
-        item.setDoneAt(LocalDateTime.now());
-        item.setUpdatedAt(LocalDateTime.now());
-        return todoItemEntityRepository.save(item);
+        if (!item.getStatus().contentEquals(TodoItemStatus.DONE.name())) {
+            item.setStatus(TodoItemStatus.DONE.name());
+            item.setDoneAt(LocalDateTime.now());
+            item.setUpdatedAt(LocalDateTime.now());
+            log.info("Item id {} marked as DONE at {}", id, item.getDoneAt());
+            return todoItemEntityRepository.save(item);
+        } else {
+            log.info("Item id {} was already marked as DONE ", id);
+            // Return the item as fetched without performing any update
+            return item;
+        }
     }
 
     /**
@@ -141,10 +170,17 @@ public class TodoItemServiceImpl implements TodoItemService {
             log.error("Attempted to mark a past due TodoItem id {} with due date {} as NOT DONE", id, item.getDueDateTime());
             throw new ActionNotAllowedException("Todo item with id " + id + " can't be marked as NOT DONE because it's past due");
         }
-        item.setStatus(TodoItemStatus.NOT_DONE.name());
-        item.setDoneAt(null); // Clear the done date-time
-        item.setUpdatedAt(LocalDateTime.now());
-        return todoItemEntityRepository.save(item);
+        if (item.getStatus().contentEquals(TodoItemStatus.DONE.name())) {
+            item.setStatus(TodoItemStatus.NOT_DONE.name());
+            item.setDoneAt(null); // Clear the done date-time
+            item.setUpdatedAt(LocalDateTime.now());
+            log.info("Item id {} marked as NOT_DONE at {}", id, item.getUpdatedAt());
+            return todoItemEntityRepository.save(item);
+        } else {
+            log.info("Item id {} with status {} cannot be marked as NOT_DONE ", id, item.getStatus());
+            // Return the item as fetched without performing any update
+            return item;
+        }
     }
 
     /**
@@ -154,6 +190,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public void deleteItem(Integer id) {
+        log.info("Deleting item id {}", id);
         todoItemEntityRepository.deleteById(id);
     }
 
@@ -163,15 +200,19 @@ public class TodoItemServiceImpl implements TodoItemService {
      */
     @Override
     public void checkAndUpdateStatusForPastDueItems() {
-        // If more statuses are introduced,
-        // the query might benefit from status not in (done, past_due) or a status in (not_done, etc)
+        // TODO: If more statuses are introduced,
+        //  the query might benefit from status not in (done, past_due) or a status in (not_done, etc)
         List<TodoItemEntity> items = todoItemEntityRepository.findAllByStatusAndDueDateTimeLessThan(
                 TodoItemStatus.NOT_DONE.name(), LocalDateTime.now());
         items.forEach(item -> {
             item.setStatus(TodoItemStatus.PAST_DUE.name());
             item.setUpdatedAt(LocalDateTime.now());
         });
-        todoItemEntityRepository.saveAll(items);
+        // TODO: This log can be updated to print all the IDs
+        log.info("Updating {} items to PAST_DUE", items.size());
+        if (items.size() > 0) {
+            todoItemEntityRepository.saveAll(items);
+        }
     }
 
 }

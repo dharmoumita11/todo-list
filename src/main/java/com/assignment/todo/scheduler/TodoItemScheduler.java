@@ -1,10 +1,12 @@
 package com.assignment.todo.scheduler;
 
 import com.assignment.todo.service.TodoItemService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class TodoItemScheduler {
 
@@ -23,6 +25,7 @@ public class TodoItemScheduler {
     //@Scheduled(cron = "0 * * * * *") // Runs every minute, adjust as necessary
     @Scheduled(fixedDelay = 60000) // Every minute
     public void updatePastDueItemsStatus() {
+        log.info("Scheduled job to update PAST_DUE items starting");
         todoItemService.checkAndUpdateStatusForPastDueItems();
     }
 
