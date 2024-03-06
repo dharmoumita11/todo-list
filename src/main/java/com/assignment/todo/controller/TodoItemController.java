@@ -14,9 +14,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/todos")
+@Validated
 public class TodoItemController {
 
     private final TodoItemService todoItemService;
@@ -66,7 +69,7 @@ public class TodoItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))) })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TodoItem getTodoItemDetails(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            @Parameter(description = "ID of the TodoItem") @PathVariable @Min(1) Integer id)
             throws ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.getItemDetails(id));
     }
@@ -102,7 +105,7 @@ public class TodoItemController {
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))) })
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TodoItem updateTodoItem(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id,
+            @Parameter(description = "ID of the TodoItem") @PathVariable @Min(1) Integer id,
             @Valid @RequestBody UpdateTodoItemRequest item) throws ActionNotAllowedException, ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.updateItem(id, item));
     }
@@ -121,7 +124,7 @@ public class TodoItemController {
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))) })
     @PatchMapping(value = "/{id}/done", produces = MediaType.APPLICATION_JSON_VALUE)
     public TodoItem markAsDone(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            @Parameter(description = "ID of the TodoItem") @PathVariable @Min(1) Integer id)
             throws ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.markAsDone(id));
     }
@@ -143,7 +146,7 @@ public class TodoItemController {
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))) })
     @PatchMapping(value = "/{id}/not-done", produces = MediaType.APPLICATION_JSON_VALUE)
     public TodoItem markAsNotDone(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id)
+            @Parameter(description = "ID of the TodoItem") @PathVariable @Min(1) Integer id)
             throws ActionNotAllowedException, ItemNotFoundException {
         return TodoItemMapper.toDto(todoItemService.markAsNotDone(id));
     }
@@ -162,7 +165,7 @@ public class TodoItemController {
                                     schema = @Schema(implementation = ErrorResponse.class))) })
     @DeleteMapping("/{id}")
     public void deleteTodoItem(
-            @Parameter(description = "ID of the TodoItem") @PathVariable Integer id) throws ItemNotFoundException {
+            @Parameter(description = "ID of the TodoItem") @PathVariable @Min(1) Integer id) throws ItemNotFoundException {
         todoItemService.deleteItem(id);
     }
 
