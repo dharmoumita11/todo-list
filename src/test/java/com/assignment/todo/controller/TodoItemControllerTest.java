@@ -20,8 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TodoItemControllerTest extends BaseTestClass {
 
@@ -180,10 +179,20 @@ public class TodoItemControllerTest extends BaseTestClass {
     }
 
     @Test
-    void whenDeleteTodoItem() {
+    void whenDeleteTodoItem_thenSuccess() throws ItemNotFoundException {
+        doNothing().when(todoItemService).deleteItem(1);
+
         todoItemController.deleteTodoItem(1);
 
         verify(todoItemService).deleteItem(1);
+    }
+
+    @Test
+    void whenDeleteTodoItem_thenItemNotFound() throws ItemNotFoundException {
+        doThrow(ItemNotFoundException.class).when(todoItemService).deleteItem(1);
+
+        assertThatThrownBy(() -> todoItemService.deleteItem(1))
+                .isInstanceOf(ItemNotFoundException.class);
     }
 
 }

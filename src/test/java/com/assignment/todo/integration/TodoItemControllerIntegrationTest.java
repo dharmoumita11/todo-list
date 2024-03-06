@@ -19,7 +19,7 @@ import java.util.Collections;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -238,9 +238,21 @@ public class TodoItemControllerIntegrationTest {
 
     @Test
     void whenDeleteTodoItem_thenDeleteTodoItem() throws Exception {
+        doNothing().when(todoItemService).deleteItem(1);
+
         mockMvc.perform(delete("/api/v1/todos/1"))
                 .andExpect(status().isOk());
         verify(todoItemService).deleteItem(1);
+    }
+
+    @Test
+    void whenDeleteTodoItem_thenItemNotFound() throws Exception {
+        doThrow(ItemNotFoundException.class).when(todoItemService).deleteItem(1);
+
+        mockMvc.perform(delete("/api/v1/todos/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(
+                        "{\"path\":\"/api/v1/todos/1\"}"));
     }
 
 }

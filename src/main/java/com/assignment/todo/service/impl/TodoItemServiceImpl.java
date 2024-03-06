@@ -30,6 +30,8 @@ public class TodoItemServiceImpl implements TodoItemService {
     private static final Predicate<TodoItemEntity> isPastDueItem = item ->
             TodoItemStatus.PAST_DUE.name().contentEquals(item.getStatus())
                     || item.getDueDateTime().isBefore(LocalDateTime.now());
+    private static final Predicate<TodoItemEntity> isDoneItem = item ->
+            TodoItemStatus.DONE.name().contentEquals(item.getStatus());
 
     private final TodoItemEntityRepository todoItemEntityRepository;
 
@@ -94,7 +96,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      * @param request  {@link UpdateTodoItemRequest}
      * @return updated {@link TodoItemEntity}
      * @throws ItemNotFoundException if an item for the input id doesn't exist
-     * @throws ActionNotAllowedException if the item for the input id is past due
+     * @throws ActionNotAllowedException if the item for the input id is not allowed to be updated
      */
     @Override
     public TodoItemEntity updateItem(Integer id, UpdateTodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
@@ -106,6 +108,9 @@ public class TodoItemServiceImpl implements TodoItemService {
         if (isPastDueItem.test(item)) {
             log.error("Attempted to update a past due TodoItem id {} with due date {}", id, request.getDueDateTime());
             throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's past due");
+        } else if (isDoneItem.test(item)) {
+            log.error("Attempted to update a done TodoItem id {} with done date {}", id, item.getDoneAt());
+            throw new ActionNotAllowedException("Updates on Todo item with id " + id + " is not allowed because it's already done");
         }
         boolean updated = false;
         if (StringUtils.hasText(request.getDescription())) {
@@ -189,8 +194,10 @@ public class TodoItemServiceImpl implements TodoItemService {
      * @param id  ID of the TodoItem
      */
     @Override
-    public void deleteItem(Integer id) {
+    public void deleteItem(Integer id) throws ItemNotFoundException {
         log.info("Deleting item id {}", id);
+        TodoItemEntity item = todoItemEntityRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException(id));
         todoItemEntityRepository.deleteById(id);
     }
 

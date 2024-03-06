@@ -278,9 +278,27 @@ public class TodoItemServiceTest extends BaseTestClass {
     }
 
     @Test
-    void whenDeleteItem() {
+    void whenDeleteItem_thenSuccess() throws ItemNotFoundException {
+        final TodoItemEntity mockItem = TodoItemEntity.builder()
+                .id(1)
+                .description("Test Item")
+                .status(TodoItemStatus.NOT_DONE.name())
+                .doneAt(LocalDateTime.now())
+                .dueDateTime(LocalDateTime.of(2050, 12, 31, 14, 15))
+                .build();
+        when(todoItemRepository.findById(1)).thenReturn(Optional.of(mockItem));
+
         todoItemService.deleteItem(1);
+
         verify(todoItemRepository, times(1)).deleteById(1);
+    }
+
+    @Test
+    void whenDeleteItem_thenItemNotFound() {
+        when(todoItemRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoItemService.deleteItem(1))
+                .isInstanceOf(ItemNotFoundException.class).hasMessageContaining("Item id 1");
     }
 
     @Test
