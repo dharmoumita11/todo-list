@@ -63,8 +63,7 @@ public class TodoItemController {
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
     @Operation(summary = "Get the details of a TodoItem",
-            responses = {
-            @ApiResponse(responseCode = "200", description = "Found the TodoItem"),
+        responses = {@ApiResponse(responseCode = "200", description = "Found the TodoItem"),
             @ApiResponse(responseCode = "404", description = "TodoItem not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))) })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

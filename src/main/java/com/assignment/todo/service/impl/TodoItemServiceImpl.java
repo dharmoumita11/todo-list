@@ -11,6 +11,7 @@ import com.assignment.todo.service.TodoItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -98,6 +99,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      * @throws ActionNotAllowedException if the item for the input id is not allowed to be updated
      */
+    @Transactional
     @Override
     public TodoItemEntity updateItem(Integer id, UpdateTodoItemRequest request) throws ItemNotFoundException, ActionNotAllowedException {
         log.info("Update item id {}", id);
@@ -143,6 +145,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      * @return updated {@link TodoItemEntity}
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      */
+    @Transactional
     @Override
     public TodoItemEntity markAsDone(Integer id) throws ItemNotFoundException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
@@ -168,6 +171,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      * @throws ItemNotFoundException if an item for the input id doesn't exist
      * @throws ActionNotAllowedException if the item for the input id is past due
      */
+    @Transactional
     @Override
     public TodoItemEntity markAsNotDone(Integer id) throws ItemNotFoundException, ActionNotAllowedException {
         TodoItemEntity item = todoItemEntityRepository.findById(id)
@@ -207,6 +211,7 @@ public class TodoItemServiceImpl implements TodoItemService {
      * Check for Due Date of TodoItems with status other than 'DONE'
      * if it's past their due date, update their status to 'PAST DUE'
      */
+    @Transactional
     @Override
     public void checkAndUpdateStatusForPastDueItems() {
         // TODO: If more statuses are introduced,
